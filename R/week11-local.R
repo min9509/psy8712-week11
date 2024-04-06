@@ -26,7 +26,6 @@ ggplot(gss_tbl, aes(x = workhours)) +
 
 #### Analysis #### 
 # I fixed the week 10 based on debrief video and code to improve Project 11. I added comments to indicate changes made.
-
 # Create holdout indices for data partitioning
 holdout_indices <- createDataPartition(gss_tbl$workhours,
                                        p = .25,
@@ -51,10 +50,8 @@ model_OLS <- train(
                            verboseIter=T, 
                            indexOut = training_folds)
 )
-
 # Extracting cross-validation results (R-squared) from the OLS model
 cv_OLS <- model_OLS$results$Rsquared
-
 # Evaluating the OLS model on the holdout test set
 holdout_OLS <- cor(
   predict(model_OLS, test_tbl, na.action = na.pass),
@@ -126,15 +123,40 @@ holdout_XGB <- cor(
 )^2
 
 ## Summarize and Visualization
-# Calculating the summary of resampling results for multiple models
+# Calculate the summary of resampling results for multiple models
 summary(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
-# Visualizing the resampling results for multiple models using a dotplot
+# Visualize the resampling results for multiple models using a dotplot
 dotplot(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
 
+
+
+
 #### Publication #### 
+# Create formats numerical values to make them look visually appealing
+make_it_pretty <- function (formatme) {
+  formatme <- formatC(formatme, format="f", digits=2)
+  formatme <- str_remove(formatme, "^0")
+  return(formatme)
+}
 
+# Create a tibble to store algorithm names, cross-validation R-squared, and holdout R-squared values
+table1_tbl <- tibble(
+  algo = c("regression","elastic net","random forests","xgboost"),
+  cv_rqs = c(
+    make_it_pretty(cv_OLS),
+    make_it_pretty(cv_elastic),
+    make_it_pretty(cv_random),
+    make_it_pretty(cv_XGB)
+  ),
+  ho_rqs = c(
+    make_it_pretty(holdout_OLS),
+    make_it_pretty(holdout_elastic),
+    make_it_pretty(holdout_random),
+    make_it_pretty(holdout_XGB)
+  )
+)
 
-
+table1_tbl
 
 # A1. 
 # The results, measured in R-squared values, varied significantly across the different models. 
