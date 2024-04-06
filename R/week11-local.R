@@ -3,6 +3,14 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
 library(haven)
 library(caret)
+
+install.packages("parallel")
+install.packages("doParallel")
+install.packages("tictoc")
+
+library(parallel)
+library(doParallel)
+library(tictoc)
 set.seed(8712)
 
 #### Data Import and Cleaning #### 
@@ -155,8 +163,11 @@ table1_tbl <- tibble(
     make_it_pretty(holdout_XGB)
   )
 )
-
 table1_tbl
+
+# Create a tibble to store the four algorithms, original & algorithms, and seconds
+table2_tbl <- tibble
+
 
 # A1. 
 # The results, measured in R-squared values, varied significantly across the different models. 
