@@ -308,4 +308,10 @@ table2_tbl
 # is the nature of the algorithms and the tasks they perform
 
 # A3.
-# 
+# XGBoost is recommended due to its scalability, performance, and improved runtime with parallelization. 
+# However, the final decision should also account for specific requirements, constraints, and available resources in the production environment.
+
+
+
+
+
