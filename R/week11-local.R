@@ -303,7 +303,9 @@ table2_tbl
 # This improvement is primarily attributed to the parallel execution of tree construction tasks.
 
 # A2.
-#
+# The difference is 30.859(Random Forests) - 2.392 (Elastic Net). 
+# I believe the main reason for this substantial difference in runtime between the fastest (Elastic Net) and slowest (Random Forests) parallelized models
+# is the nature of the algorithms and the tasks they perform
 
 # A3.
 # 
