@@ -272,14 +272,40 @@ table4_tbl
 # Export csv file
 write_csv(table3_tbl, "data/table3.csv")
 write_csv(table4_tbl, "data/table4.csv")
-?write_csv
+
 # A1
 # Based on results, it appears that the Random Forests algorithm benefited the most from moving to the supercomputer, 
 # as it showed a significant improvement in both CV (.92) and Ho RQS(.61) metrics.
 
+# A2
+# Generally, as the number of cores increases, the computation time tends to decrease. 
+# This is because parallel processing allows tasks to be divided among multiple cores, speeding up overall computation. 
+# However, there may be diminishing returns as the number of cores increases significantly due to overhead and resource contention.
+
+# A3
+# Elastic Net shows a significant improvement in RQS metrics when using the supercomputer, 
+# but it also requires a relatively high number of cores. T
+# herefore, the decision to use the supercomputer for Elastic Net should consider the availability of resources and the specific requirements of the production model.
 
 # I tried to use putty, but I couldn't. It said that network does not connect. 
-# So, I created RStudio Server, connected git hub, and run all codes. 
+# So, I created RStudio Server, connected git hub, and run all codes. Then, answered three questions in objective 26.
+
+# > table3_tbl
+# A tibble: 4 × 3
+# algo           cv_rqs ho_rqs
+# <chr>          <chr>  <chr> 
+# 1 regression     .17    .01   
+# 2 elastic net    .81    .48   
+# 3 random forests .91    .60   
+# 4 xgboost        .96    .49   
+# > table4_tbl
+# A tibble: 4 × 3
+# algo           supercomputer       supercomputer_n    
+# <chr>          <chr>               <chr>              
+# 1 regression     7.581 sec elapsed   7.469 sec elapsed  
+# 2 elastic net    15.851 sec elapsed  16.545 sec elapsed 
+# 3 random forests 126.069 sec elapsed 135.285 sec elapsed
+# 4 xgboost        8.209 sec elapsed   8.212 sec elapsed  
 
 
 
