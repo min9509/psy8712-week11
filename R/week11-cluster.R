@@ -1,5 +1,4 @@
 #### Script Settings and Resources ####
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
 library(haven)
 library(caret)
@@ -9,9 +8,8 @@ library(tictoc)
 set.seed(8712)
 
 #### Data Import and Cleaning #### 
-gss_original_tbl <- read_sav(file = "../data/GSS2016.sav")
+gss_original_tbl <- read_sav(file = "data/GSS2016.sav")
 
-# Create a variable gss_tbl
 gss_tbl <- gss_original_tbl %>%
   filter(!is.na(MOSTHRS)) %>%
   rename(workhours = MOSTHRS) %>%
@@ -20,28 +18,16 @@ gss_tbl <- gss_original_tbl %>%
   sapply(as.numeric) %>% 
   as_tibble()  
 
-#### Visualization #### 
-ggplot(gss_tbl, aes(x = workhours)) +
-  geom_histogram() +
-  labs(x = "Working hours",
-       y = "Number of data",
-       title = "Histogram of working hours")
-
 #### Analysis #### 
-# I fixed the week 10 based on debrief video and code to improve Project 11. I added comments to indicate changes made.
-# Create holdout indices for data partitioning
 holdout_indices <- createDataPartition(gss_tbl$workhours,
                                        p = .25,
                                        list = T)$Resample1
-# Create a test set using the holdout indices
+
 test_tbl <- gss_tbl[holdout_indices,]
-# Create a training set by excluding the holdout indices
 training_tbl <- gss_tbl[-holdout_indices,]
-# Create cross-validation folds for the training data
 training_folds <- createFolds(training_tbl$workhours)
 
-## OLS Model ## 
-# Train the OLS regression model using train function
+# OLS Model
 model_OLS <- train(
   workhours ~ .,
   training_tbl,
@@ -53,16 +39,13 @@ model_OLS <- train(
                            verboseIter=T, 
                            indexOut = training_folds)
 )
-# Extracting cross-validation results (R-squared) from the OLS model
 cv_OLS <- model_OLS$results$Rsquared
-# Evaluating the OLS model on the holdout test set
 holdout_OLS <- cor(
   predict(model_OLS, test_tbl, na.action = na.pass),
   test_tbl$workhours
 )^2
 
-## Elastic net model ## 
-# Train the elastic net model using train
+# Elastic net model
 model_elastic <- train(
   workhours ~ .,
   training_tbl,
@@ -74,16 +57,13 @@ model_elastic <- train(
                            verboseIter=T, 
                            indexOut = training_folds)
 )
-# Extracting cross-validation results (R-squared) from the Elastic net model
 cv_elastic <- max(model_elastic$results$Rsquared)
-# Evaluating the Elastic net model on the holdout test set
 holdout_elastic <- cor(
   predict(model_elastic, test_tbl, na.action = na.pass),
   test_tbl$workhours
 )^2
 
-## Random forest model ## 
-# Train the random forest model using train
+# Random forest model 
 model_random <- train(
   workhours ~ .,
   training_tbl,
@@ -95,16 +75,13 @@ model_random <- train(
                            verboseIter=T, 
                            indexOut = training_folds)
 )
-# Extracting cross-validation results (R-squared) from the random forest model
 cv_random <- max(model_random$results$Rsquared)
-# Evaluating the random forest model on the holdout test set
 holdout_random <- cor(
   predict(model_random, test_tbl, na.action = na.pass),
   test_tbl$workhours
 )^2
 
-## Random XGB ##
-# Train the random XGB using train
+# Random XGB
 model_XGB <- train(
   workhours ~ .,
   training_tbl,
@@ -117,22 +94,17 @@ model_XGB <- train(
                            verboseIter=T, 
                            indexOut = training_folds)
 )
-# Extracting cross-validation results (R-squared) from the random XGB
 cv_XGB <- max(model_XGB$results$Rsquared)
-# Evaluating the random XGB on the holdout test set
 holdout_XGB <- cor(
   predict(model_XGB, test_tbl, na.action = na.pass),
   test_tbl$workhours
 )^2
 
-## Summarize and Visualization  ## 
-# Calculate the summary of resampling results for multiple models
 summary(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
-# Visualize the resampling results for multiple models using a dotplot
 dotplot(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
 
-## Calculate running times ##
-# OLS - Add tic and toc check running times
+## Supercomputer running times ##
+# OLS model
 tic()
 model_OLS <- train(
   workhours ~ .,
@@ -148,9 +120,9 @@ model_OLS <- train(
 toc_OLS <- toc()
 toc_OLS
 
-# Elastic net model - Add tic and toc check running times
+# Elastic net model
 tic()
-model_elastic <- train(
+model_elastic_Par <- train(
   workhours ~ .,
   training_tbl,
   method="glmnet",
@@ -163,7 +135,7 @@ model_elastic <- train(
 )
 toc_elastic <- toc()
 
-# Random forest model - Add tic and toc check running times
+# Random forest model
 tic()
 model_random <- train(
   workhours ~ .,
@@ -178,7 +150,7 @@ model_random <- train(
 )
 toc_random <- toc()
 
-# XGB model - Add tic and toc check running times
+# XGB model
 tic()
 model_XGB <- train(
   workhours ~ .,
@@ -195,11 +167,10 @@ model_XGB <- train(
 toc_XGB <- toc()
 
 ## Parallel running times ##
-# Create a local cluster using the makeCluster function and register the local cluster for parallel.
 local_cluster <- makeCluster(detectCores() - 1)
 registerDoParallel(local_cluster)
 
-# OLS - Add tic and toc check running times for parallel.
+# OLS 
 tic()
 model_OLS_Par <- train(
   workhours ~ .,
@@ -229,7 +200,7 @@ model_elastic_Par <- train(
 )
 toc_elastic_Par <- toc()
 
-# Random forest model - Add tic and toc check running times for parallel.
+# Random forest model
 tic() 
 model_random_Par <- train(
   workhours ~ .,
@@ -244,7 +215,7 @@ model_random_Par <- train(
 )
 toc_random_Par <- toc()
 
-# XGB model - Add tic and toc check running times for parallel.
+# XGB model
 tic()
 model_XGB_Par <- train(
   workhours ~ .,
@@ -273,7 +244,7 @@ make_it_pretty <- function (formatme) {
 }
 
 # Create a tibble to store algorithm names, cross-validation R-squared, and holdout R-squared values
-table1_tbl <- tibble(
+table3_tbl <- tibble(
   algo = c("regression","elastic net","random forests","xgboost"),
   cv_rqs = c(
     make_it_pretty(cv_OLS),
@@ -288,29 +259,15 @@ table1_tbl <- tibble(
     make_it_pretty(holdout_XGB)
   )
 )
-table1_tbl
+table3_tbl
 
 # Create a tibble to store the four algorithms, original & algorithms, and seconds
-table2_tbl <- tibble(
+table4_tbl <- tibble(
   algo = c("regression","elastic net","random forests","xgboost"),
-  original = c(toc_OLS$callback_msg, toc_elastic$callback_msg, toc_random$callback_msg, toc_XGB$callback_msg),
-  parallelized = c(toc_OLS_Par$callback_msg, toc_elastic_Par$callback_msg, toc_random_Par$callback_msg, toc_XGB_Par$callback_msg)
+  supercomputer = c(toc_OLS$callback_msg, toc_elastic$callback_msg, toc_random$callback_msg, toc_XGB$callback_msg),
+  supercomputer_n = c(toc_OLS_Par$callback_msg, toc_elastic_Par$callback_msg, toc_random_Par$callback_msg, toc_XGB_Par$callback_msg)
 )
-table2_tbl
-
-# A1. 
-# The comparison between the original time (41.717 seconds) and the parallelized time (30.859 seconds) demonstrates a notable improvement in performance. 
-# This improvement is primarily attributed to the parallel execution of tree construction tasks.
-
-# A2.
-# The difference is 30.859(Random Forests) - 2.392 (Elastic Net). 
-# I believe the main reason for this substantial difference in runtime between the fastest (Elastic Net) and slowest (Random Forests) parallelized models
-# is the nature of the algorithms and the tasks they perform
-
-# A3.
-# XGBoost is recommended due to its scalability, performance, and improved runtime with parallelization. 
-# However, the final decision should also account for specific requirements, constraints, and available resources in the production environment.
-
+table4_tbl
 
 
 
