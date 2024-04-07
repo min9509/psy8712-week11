@@ -3,11 +3,6 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
 library(haven)
 library(caret)
-
-install.packages("parallel")
-install.packages("doParallel")
-install.packages("tictoc")
-
 library(parallel)
 library(doParallel)
 library(tictoc)
@@ -45,7 +40,7 @@ training_tbl <- gss_tbl[-holdout_indices,]
 # Create cross-validation folds for the training data
 training_folds <- createFolds(training_tbl$workhours)
 
-## OLS Model
+## OLS Model ## 
 # Train the OLS regression model using train function
 model_OLS <- train(
   workhours ~ .,
@@ -66,7 +61,7 @@ holdout_OLS <- cor(
   test_tbl$workhours
 )^2
 
-## Elastic net model
+## Elastic net model ## 
 # Train the elastic net model using train
 model_elastic <- train(
   workhours ~ .,
@@ -87,7 +82,7 @@ holdout_elastic <- cor(
   test_tbl$workhours
 )^2
 
-## Random forest model
+## Random forest model ## 
 # Train the random forest model using train
 model_random <- train(
   workhours ~ .,
@@ -108,7 +103,7 @@ holdout_random <- cor(
   test_tbl$workhours
 )^2
 
-## Random XGB
+## Random XGB ##
 # Train the random XGB using train
 model_XGB <- train(
   workhours ~ .,
@@ -130,14 +125,144 @@ holdout_XGB <- cor(
   test_tbl$workhours
 )^2
 
-## Summarize and Visualization
+## Summarize and Visualization  ## 
 # Calculate the summary of resampling results for multiple models
 summary(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
 # Visualize the resampling results for multiple models using a dotplot
 dotplot(resamples(list(model_OLS, model_elastic, model_random, model_XGB)), metric="Rsquared")
 
+## Calculate running times ##
+# OLS - Add tic and toc check running times
+tic()
+model_OLS <- train(
+  workhours ~ .,
+  training_tbl,
+  method="lm",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_OLS <- toc()
+toc_OLS
 
+# Elastic net model - Add tic and toc check running times
+tic()
+model_elastic <- train(
+  workhours ~ .,
+  training_tbl,
+  method="glmnet",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_elastic <- toc()
 
+# Random forest model - Add tic and toc check running times
+tic()
+model_random <- train(
+  workhours ~ .,
+  training_tbl,
+  method="ranger",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_random <- toc()
+
+# XGB model - Add tic and toc check running times
+tic()
+model_XGB <- train(
+  workhours ~ .,
+  training_tbl,
+  method="xgbLinear",
+  na.action = na.pass,
+  tuneLength = 1,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_XGB <- toc()
+
+## Parallel running times ##
+# Create a local cluster using the makeCluster function and register the local cluster for parallel.
+local_cluster <- makeCluster(detectCores() - 1)
+registerDoParallel(local_cluster)
+
+# OLS - Add tic and toc check running times for parallel.
+tic()
+model_OLS_Par <- train(
+  workhours ~ .,
+  training_tbl,
+  method="lm",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_OLS_Par <- toc()
+
+# Elastic net model - Add tic and toc check running times for parallel.
+tic()
+model_elastic_Par <- train(
+  workhours ~ .,
+  training_tbl,
+  method="glmnet",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_elastic_Par <- toc()
+
+# Random forest model - Add tic and toc check running times for parallel.
+tic() 
+model_random_Par <- train(
+  workhours ~ .,
+  training_tbl,
+  method="ranger",
+  na.action = na.pass,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_random_Par <- toc()
+
+# XGB model - Add tic and toc check running times for parallel.
+tic()
+model_XGB_Par <- train(
+  workhours ~ .,
+  training_tbl,
+  method="xgbLinear",
+  na.action = na.pass,
+  tuneLength = 1,
+  preProcess = c("center","scale","zv","nzv","medianImpute"),
+  trControl = trainControl(method="cv", 
+                           number=10, 
+                           verboseIter=T, 
+                           indexOut = training_folds)
+)
+toc_XGB_Par <- toc()
+
+# Stop local cluster and parallel
+stopCluster(local_cluster)
+registerDoSEQ()
 
 #### Publication #### 
 # Create formats numerical values to make them look visually appealing
@@ -166,24 +291,18 @@ table1_tbl <- tibble(
 table1_tbl
 
 # Create a tibble to store the four algorithms, original & algorithms, and seconds
-table2_tbl <- tibble
-
+table2_tbl <- tibble(
+  algo = c("regression","elastic net","random forests","xgboost"),
+  original = c(toc_OLS$callback_msg, toc_elastic$callback_msg, toc_random$callback_msg, toc_XGB$callback_msg),
+  parallelized = c(toc_OLS_Par$callback_msg, toc_elastic_Par$callback_msg, toc_random_Par$callback_msg, toc_XGB_Par$callback_msg)
+)
+table2_tbl
 
 # A1. 
-# The results, measured in R-squared values, varied significantly across the different models. 
-# The OLS Regression model showed the lowest performance with an R-squared value of 0.00, indicating a poor fit to the data. 
-# Conversely, Elastic Net, Random Forest, and eXtreme Gradient Boosting (XGB) models performed relatively better, 
-# with R-squared values of 0.49, 0.40, and 0.32, respectively.
-# I believe this variation in results can be attributed to the differences in how each model handles the data 
-# and captures the underlying relationships between variables. 
+# 
 
 # A2.
-# The k-fold cross-validation (CV) R-squared values were generally lower than the holdout CV R-squared values. 
-# This is because k-fold CV divides the data into multiple folds for training and testing, 
-# which tends to give a more conservative estimate of how well the model performs.
+#
 
 # A3.
-# For real-life predictions, I'd choose the Random Forest model 
-# because it had the best prediction accuracy among the models tested. 
-# It's good with big datasets and can handle complex relationships well. 
-# However, it might overfit and take longer to train with large amounts of data.
+# 
