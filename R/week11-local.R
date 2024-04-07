@@ -299,7 +299,8 @@ table2_tbl <- tibble(
 table2_tbl
 
 # A1. 
-# 
+# The comparison between the original time (41.717 seconds) and the parallelized time (30.859 seconds) demonstrates a notable improvement in performance. 
+# This improvement is primarily attributed to the parallel execution of tree construction tasks.
 
 # A2.
 #
