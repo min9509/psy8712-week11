@@ -166,7 +166,7 @@ model_XGB <- train(
 )
 toc_XGB <- toc()
 
-## Parallel running times ##
+## Super computing running times ##
 local_cluster <- makeCluster(detectCores() - 1)
 registerDoParallel(local_cluster)
 
@@ -268,6 +268,18 @@ table4_tbl <- tibble(
   supercomputer_n = c(toc_OLS_Par$callback_msg, toc_elastic_Par$callback_msg, toc_random_Par$callback_msg, toc_XGB_Par$callback_msg)
 )
 table4_tbl
+
+# Export csv file
+write_csv(table3_tbl, "data/table3.csv")
+write_csv(table4_tbl, "data/table4.csv")
+?write_csv
+# A1
+# Based on results, it appears that the Random Forests algorithm benefited the most from moving to the supercomputer, 
+# as it showed a significant improvement in both CV (.92) and Ho RQS(.61) metrics.
+
+
+# I tried to use putty, but I couldn't. It said that network does not connect. 
+# So, I created RStudio Server, connected git hub, and run all codes. 
 
 
 

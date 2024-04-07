@@ -1,0 +1,5 @@
+algo,supercomputer,supercomputer_n
+regression,3.859 sec elapsed,4.057 sec elapsed
+elastic net,5.175 sec elapsed,2.596 sec elapsed
+random forests,40.248 sec elapsed,35.004 sec elapsed
+xgboost,5.602 sec elapsed,2.554 sec elapsed
